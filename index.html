@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MedFlow">
+<title>MedFlow</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#273449;
+  --border:rgba(148,163,184,0.15);
+  --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --purple:#818cf8;--purple-bg:rgba(129,140,248,0.12);
+  --green:#4ade80;--green-bg:rgba(74,222,128,0.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
+  --teal:#2dd4bf;--teal-bg:rgba(45,212,191,0.1);
+  --r:14px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.page{display:none;max-width:480px;margin:0 auto;padding-bottom:40px;}
+.page.on{display:block;}
+.hdr{padding:48px 20px 20px;}
+.logo{font-size:24px;font-weight:600;letter-spacing:-0.5px;}
+.logo span{color:var(--purple);}
+.sub{font-size:13px;color:var(--text3);margin-top:4px;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 20px;}
+.rc{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:22px 16px;text-align:center;cursor:pointer;}
+.rc:active{opacity:0.7;}
+.rc.lab{border-color:rgba(129,140,248,0.35);}
+.rc.dia{border-color:rgba(45,212,191,0.35);}
+.rc.lek{border-color:rgba(248,113,113,0.35);}
+.rc.man{border-color:rgba(251,191,36,0.35);}
+.rc-ico{font-size:36px;display:block;margin-bottom:10px;}
+.rc-name{font-size:15px;font-weight:600;}
+.rc-desc{font-size:12px;color:var(--text3);margin-top:3px;}
+.pin-wrap{padding:20px;}
+.pin-hdr{font-size:20px;font-weight:600;margin-bottom:6px;}
+.pin-sub{font-size:14px;color:var(--text2);margin-bottom:30px;}
+.pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:30px;}
+.pd{width:18px;height:18px;border-radius:50%;border:2px solid var(--text3);background:transparent;transition:all 0.15s;}
+.pd.on{background:var(--purple);border-color:var(--purple);}
+.pin-err{font-size:13px;color:var(--red);text-align:center;margin-bottom:14px;min-height:20px;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pk{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;font-size:22px;font-weight:500;text-align:center;cursor:pointer;}
+.pk:active{background:var(--bg3);}
+.pk.del{font-size:16px;color:var(--text2);}
+.pk.empty{background:transparent;border-color:transparent;cursor:default;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:48px 20px 12px;}
+.rpill{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;font-size:13px;font-weight:500;}
+.rpill.lab{background:var(--purple-bg);color:var(--purple);}
+.rpill.dia{background:var(--teal-bg);color:var(--teal);}
+.rpill.lek{background:var(--red-bg);color:var(--red);}
+.rpill.man{background:var(--amber-bg);color:var(--amber);}
+.chg{font-size:13px;color:var(--text3);cursor:pointer;}
+.steps{display:flex;align-items:center;padding:4px 20px 16px;}
+.sn{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.sc{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.sc.w{background:var(--bg2);color:var(--text3);border:1px solid var(--border);}
+.sc.a{background:var(--purple-bg);color:var(--purple);border:1.5px solid var(--purple);}
+.sc.d{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,222,128,0.3);}
+.sl{font-size:9px;color:var(--text3);white-space:nowrap;}
+.sline{flex:1;height:1px;background:var(--border);margin-bottom:18px;}
+.wrap{padding:0 20px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+.clbl{font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:12px;}
+.flbl{font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:6px;margin-top:12px;}
+.flbl:first-child{margin-top:0;}
+textarea,input[type=text]{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;resize:none;outline:none;}
+textarea:focus,input[type=text]:focus{border-color:var(--purple);}
+.btn{width:100%;padding:15px;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn:active{opacity:0.8;}
+.btn:disabled{opacity:0.35;cursor:default;}
+.bp{background:var(--purple);color:#0f172a;}
+.bg2btn{background:var(--green);color:#0f172a;}
+.bgh{background:var(--bg2);color:var(--text2);border:1px solid var(--border)!important;}
+.bsm{padding:8px 14px;border-radius:var(--rs);font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text);display:inline-flex;align-items:center;gap:6px;}
+.bsm:active{opacity:0.7;}
+.bsm.g{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,0.25);}
+.bsm.r{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,0.25);}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:500;}
+.bg-g{background:var(--green-bg);color:var(--green);}
+.bg-r{background:var(--red-bg);color:var(--red);}
+.bg-p{background:var(--purple-bg);color:var(--purple);}
+.bg-a{background:var(--amber-bg);color:var(--amber);}
+.pr{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;}
+.pr:last-child{border-bottom:none;}
+.pname{font-size:14px;font-weight:500;}
+.pcode{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.ppat{font-size:11px;color:var(--amber);font-style:italic;margin-top:1px;}
+.expbox{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:14px;font-size:13px;font-family:'DM Mono',monospace;color:var(--text);white-space:pre;line-height:1.8;margin-bottom:10px;overflow-x:auto;}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.dc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px 10px;text-align:center;}
+.dnum{font-size:26px;font-weight:600;}
+.dlbl{font-size:11px;color:var(--text3);margin-top:3px;}
+.tli{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.tli:last-child{border-bottom:none;}
+.tld{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.tlt{font-size:13px;color:var(--text2);}
+.tlts{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace;}
+.hi{padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;}
+.hd{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:6px;}
+.hr2{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--rs);padding:3px;margin-bottom:14px;}
+.tab{flex:1;padding:9px;border-radius:6px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;color:var(--text3);}
+.tab.on{background:var(--bg3);color:var(--text);}
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;}
+.eico{font-size:40px;margin-bottom:12px;opacity:0.4;}
+.flash{font-size:12px;color:var(--green);margin-left:8px;display:none;}
+.info-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--amber-bg);border-radius:var(--rs);margin-top:10px;}
+.succ-row{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--green-bg);border:1px solid rgba(74,222,128,0.2);border-radius:var(--rs);margin-bottom:12px;}
+.urg-row{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--red-bg);border:1px solid rgba(248,113,113,0.2);border-radius:var(--rs);margin-bottom:12px;}
+.status-bar{padding:10px 14px;border-radius:var(--rs);font-size:13px;margin-bottom:12px;text-align:center;}
+.status-bar.waiting{background:var(--bg2);color:var(--text3);}
+.status-bar.ready{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+.status-bar.urgent{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+.pulse{animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+</style>
+</head>
+<body>
+
+<!-- VÝBER ROLY -->
+<div class="page on" id="p-role">
+  <div class="hdr">
+    <div class="logo">Med<span>Flow</span></div>
+    <div class="sub">Klebsiella pneumoniae · LIS workflow</div>
+  </div>
+  <div style="padding:0 20px 14px;font-size:13px;color:var(--text2);">Vyber svoju rolu:</div>
+  <div class="role-grid">
+    <div class="rc lab" onclick="goPin('laborant')"><span class="rc-ico">🔬</span><div class="rc-name">Laborant</div><div class="rc-desc">Zadáva LIS kódy</div></div>
+    <div class="rc dia" onclick="goPin('diagnostik')"><span class="rc-ico">🧫</span><div class="rc-name">Diagnostik</div><div class="rc-desc">Priraďuje mená</div></div>
+    <div class="rc lek" onclick="goPin('lekar')"><span class="rc-ico">🩺</span><div class="rc-name">Lekár</div><div class="rc-desc">Potvrdzuje stav</div></div>
+    <div class="rc man" onclick="goPin('manazer')"><span class="rc-ico">📊</span><div class="rc-name">Manažér</div><div class="rc-desc">Sleduje priebeh</div></div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="page" id="p-pin">
+  <div class="hdr"><div class="logo">Med<span>Flow</span></div></div>
+  <div class="pin-wrap">
+    <div class="pin-hdr" id="pin-hdr">Zadaj PIN</div>
+    <div class="pin-sub">Overenie totožnosti</div>
+    <div class="pin-dots">
+      <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div>
+      <div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <div class="pin-grid">
+      <div class="pk" onclick="pk('1')">1</div><div class="pk" onclick="pk('2')">2</div><div class="pk" onclick="pk('3')">3</div>
+      <div class="pk" onclick="pk('4')">4</div><div class="pk" onclick="pk('5')">5</div><div class="pk" onclick="pk('6')">6</div>
+      <div class="pk" onclick="pk('7')">7</div><div class="pk" onclick="pk('8')">8</div><div class="pk" onclick="pk('9')">9</div>
+      <div class="pk empty"></div><div class="pk" onclick="pk('0')">0</div><div class="pk del" onclick="pdel()">⌫</div>
+    </div>
+    <button class="btn bgh" style="margin-top:16px;" onclick="show('p-role')">Späť</button>
+  </div>
+</div>
+
+<!-- LABORANT -->
+<div class="page" id="p-laborant">
+  <div class="topbar"><div class="rpill lab">🔬 Laborant</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
+  <div class="steps" id="st-lab"></div>
+  <div class="wrap">
+    <div class="tabs"><div class="tab on" onclick="ltab('nova',this)">Nová správa</div><div class="tab" onclick="ltab('hist',this)">História</div></div>
+    <div id="l-nova">
+      <div class="card">
+        <div class="clbl">Zadaj LIS kódy</div>
+        <div class="flbl">Kódy (každý na nový riadok)</div>
+        <textarea id="l-codes" rows="4" placeholder="2026042451685&#10;2026042451686"></textarea>
+        <div class="info-row"><span style="color:var(--amber);">⚠️</span><span style="font-size:12px;color:var(--amber);">Patogén: <strong>Klebsiella pneumoniae</strong> — priradený automaticky</span></div>
+        <button class="btn bp" onclick="lSend()" id="btn-l-send">📤 Odoslať diagnostikovi</button>
+      </div>
+      <div id="l-sent" style="display:none;">
+        <div class="status-bar ready">✅ Kódy odoslané — diagnostik ich vidí v reálnom čase</div>
+      </div>
+    </div>
+    <div id="l-hist" style="display:none;"><div id="l-hc"></div></div>
+  </div>
+</div>
+
+<!-- DIAGNOSTIK -->
+<div class="page" id="p-diagnostik">
+  <div class="topbar"><div class="rpill dia">🧫 Diagnostik</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
+  <div class="steps" id="st-dia"></div>
+  <div class="wrap">
+    <div class="tabs"><div class="tab on" onclick="dtab('nova',this)">Aktívna správa</div><div class="tab" onclick="dtab('hist',this)">História</div></div>
+    <div id="d-nova">
+      <div id="d-loading" class="status-bar waiting pulse">⏳ Načítavam dáta...</div>
+      <div id="d-waiting" style="display:none;">
+        <div class="status-bar waiting">⏳ Čakám na kódy od laboranta...</div>
+      </div>
+      <div id="d-f1" style="display:none;">
+        <div class="card">
+          <div class="clbl">Prirad mená k LIS kódom</div>
+          <div id="d-name-list"></div>
+          <button class="btn bp" onclick="dSend()" id="btn-d-send">📤 Odoslať lekárovi</button>
+        </div>
+      </div>
+      <div id="d-f2" style="display:none;">
+        <div class="status-bar waiting pulse">⏳ Čakám na výsledok od lekára...</div>
+      </div>
+      <div id="d-f3" style="display:none;">
+        <div class="succ-row"><span style="color:var(--green);">✅</span><span style="font-size:13px;color:var(--green);">Výsledok prijatý — <strong id="d-hc">0</strong> hospitalizovaných na odber</span></div>
+        <div class="card">
+          <div class="clbl">Export pre externý systém</div>
+          <div class="expbox" id="d-exp-txt"></div>
+          <button class="btn bg2btn" onclick="cpExp()">📋 Kopírovať pre externý systém</button>
+          <span class="flash" id="exp-fl">✓ Skopírované</span>
+        </div>
+        <button class="btn bgh" onclick="dReset()">Nová správa</button>
+      </div>
+    </div>
+    <div id="d-hist" style="display:none;"><div id="d-hc2"></div></div>
+  </div>
+</div>
+
+<!-- LEKÁR -->
+<div class="page" id="p-lekar">
+  <div class="topbar"><div class="rpill lek">🩺 Lekár</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
+  <div class="steps" id="st-lek"></div>
+  <div class="wrap">
+    <div class="tabs"><div class="tab on" onclick="ltktab('nova',this)">Aktívna správa</div><div class="tab" onclick="ltktab('hist',this)">História</div></div>
+    <div id="lk-nova">
+      <div id="lk-loading" class="status-bar waiting pulse">⏳ Načítavam dáta...</div>
+      <div id="lk-waiting" style="display:none;">
+        <div class="status-bar waiting">⏳ Čakám na zoznam od diagnostika...</div>
+      </div>
+      <div id="lk-f1" style="display:none;">
+        <div class="urg-row"><span style="color:var(--red);">⚠️</span><span style="font-size:13px;color:var(--red);font-weight:500;">Urgentné — označ stav hospitalizácie</span></div>
+        <div style="font-size:12px;color:var(--amber);margin-bottom:12px;">Patogén: <strong>Klebsiella pneumoniae</strong></div>
+        <div class="card">
+          <div id="lk-list"></div>
+          <button class="btn bp" style="margin-top:4px;" onclick="lkSend()" id="btn-lk-send">📤 Odoslať diagnostikovi</button>
+        </div>
+      </div>
+      <div id="lk-done" style="display:none;">
+        <div class="status-bar ready">✅ Výsledok odoslaný diagnostikovi</div>
+        <button class="btn bgh" style="margin-top:10px;" onclick="lkReset()">Nová správa</button>
+      </div>
+    </div>
+    <div id="lk-hist" style="display:none;"><div id="lk-hc"></div></div>
+  </div>
+</div>
+
+<!-- MANAŽÉR -->
+<div class="page" id="p-manazer">
+  <div class="topbar"><div class="rpill man">📊 Manažér</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
+  <div class="wrap" style="padding-top:8px;">
+    <div class="dgrid">
+      <div class="dc"><div class="dnum" id="d-tot" style="color:var(--purple);">0</div><div class="dlbl">LIS kódov</div></div>
+      <div class="dc"><div class="dnum" id="d-h" style="color:var(--green);">0</div><div class="dlbl">Na odber</div></div>
+      <div class="dc"><div class="dnum" id="d-p" style="color:var(--red);">0</div><div class="dlbl">Prepustení</div></div>
+    </div>
+    <div class="card">
+      <div class="clbl">Aktuálny stav</div>
+      <div id="m-status"><div class="empty"><div class="eico">📭</div>Žiadna aktívna session</div></div>
+    </div>
+    <div class="card">
+      <div class="clbl">História (7 dní)</div>
+      <div id="m-hc"><div class="empty"><div class="eico">📂</div>Žiadne záznamy</div></div>
+    </div>
+    <button class="btn bgh" onclick="buildDash()">🔄 Obnoviť</button>
+  </div>
+</div>
+
+<script>
+// SUPABASE
+const SB_URL = 'https://wetgjepicqreeoupkjoq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndldGdqZXBpY3FyZWVvdXBram9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDk4NzIsImV4cCI6MjA5NTk4NTg3Mn0.tKEcNYxsTooediVHuAsMcABEL_TOSWSKwCdfQ-HwjDQ';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const PINS = {laborant:'1111',diagnostik:'2222',lekar:'3333',manazer:'4444'};
+const RNAMES = {laborant:'Laborant',diagnostik:'Diagnostik',lekar:'Lekár',manazer:'Manažér'};
+let pRole=null, pVal='', currentRole=null;
+let realtimeSub=null;
+
+// SESSION ID — dnešný deň ako kľúč
+function sessionId() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// SUPABASE HELPERS
+async function dbGet() {
+  const {data} = await sb.from('sessions').select('data').eq('id', sessionId()).single();
+  return data?.data || null;
+}
+async function dbSet(patch) {
+  const current = await dbGet() || {};
+  const updated = {...current, ...patch, updated_at: new Date().toISOString()};
+  await sb.from('sessions').upsert({id: sessionId(), data: updated, updated_at: new Date().toISOString()});
+  return updated;
+}
+
+// HISTORY (lokálne)
+function saveHist(role,data){
+  const k='mf_'+role;
+  let h=[];
+  try{h=JSON.parse(localStorage.getItem(k)||'[]');}catch(e){}
+  h.push({ts:Date.now(),...data});
+  const cut=Date.now()-7*864e5;
+  localStorage.setItem(k,JSON.stringify(h.filter(x=>x.ts>cut)));
+}
+function getHist(role){try{return JSON.parse(localStorage.getItem('mf_'+role)||'[]');}catch(e){return[];}}
+function fmtDt(ts){return new Date(ts).toLocaleString('sk-SK',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+
+function show(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+  if(realtimeSub){sb.removeChannel(realtimeSub);realtimeSub=null;}
+}
+
+function goPin(role) {
+  pRole=role; pVal='';
+  updDots();
+  document.getElementById('pin-hdr').textContent='PIN pre '+RNAMES[role];
+  document.getElementById('pin-err').textContent='';
+  show('p-pin');
+}
+
+function pk(k) {
+  if(pVal.length>=4) return;
+  pVal+=k; updDots();
+  if(pVal.length===4){
+    setTimeout(()=>{
+      if(pVal===PINS[pRole]){activateRole(pRole);}
+      else{document.getElementById('pin-err').textContent='Nesprávny PIN — skús znova';pVal='';updDots();}
+    },150);
+  }
+}
+function pdel(){pVal=pVal.slice(0,-1);updDots();}
+function updDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('on',i<pVal.length);}
+
+function activateRole(role) {
+  currentRole=role;
+  buildSteps(role);
+  show('p-'+role);
+  if(role==='diagnostik') loadDiag();
+  if(role==='lekar') loadLek();
+  if(role==='manazer') buildDash();
+  subscribeRealtime(role);
+}
+
+function subscribeRealtime(role) {
+  realtimeSub = sb.channel('sessions_changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'sessions'},(payload)=>{
+      if(role==='diagnostik') renderDiag(payload.new?.data);
+      if(role==='lekar') renderLek(payload.new?.data);
+      if(role==='manazer') renderManDash(payload.new?.data);
+    })
+    .subscribe();
+}
+
+const SICO=['🔬','🧫','🩺','📤'];
+const SLBL=['Laborant','Diagnostik','Lekár','Export'];
+function buildSteps(role) {
+  const ai={laborant:0,diagnostik:1,lekar:2,manazer:0}[role]??0;
+  ['st-lab','st-dia','st-lek'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    let h='';
+    for(let i=0;i<4;i++){
+      const c=i<ai?'d':i===ai?'a':'w';
+      h+=`<div class="sn"><div class="sc ${c}">${i<ai?'✓':SICO[i]}</div><div class="sl">${SLBL[i]}</div></div>`;
+      if(i<3)h+='<div class="sline"></div>';
+    }
+    el.innerHTML=h;
+  });
+}
+
+// TABS
+function ltab(t,el){
+  document.getElementById('l-nova').style.display=t==='nova'?'block':'none';
+  document.getElementById('l-hist').style.display=t==='hist'?'block':'none';
+  document.querySelectorAll('#p-laborant .tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  if(t==='hist')renderHist('laborant','l-hc');
+}
+function dtab(t,el){
+  document.getElementById('d-nova').style.display=t==='nova'?'block':'none';
+  document.getElementById('d-hist').style.display=t==='hist'?'block':'none';
+  document.querySelectorAll('#p-diagnostik .tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  if(t==='hist')renderHist('diagnostik','d-hc2');
+}
+function ltktab(t,el){
+  document.getElementById('lk-nova').style.display=t==='nova'?'block':'none';
+  document.getElementById('lk-hist').style.display=t==='hist'?'block':'none';
+  document.querySelectorAll('#p-lekar .tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  if(t==='hist')renderHist('lekar','lk-hc');
+}
+
+function renderHist(role,tid){
+  const h=getHist(role).slice().reverse();
+  const el=document.getElementById(tid);
+  if(!h.length){el.innerHTML='<div class="empty"><div class="eico">📂</div>Žiadne záznamy za posledných 7 dní</div>';return;}
+  el.innerHTML=h.map(x=>{
+    if(role==='laborant')return`<div class="hi"><div class="hd">${fmtDt(x.ts)}</div>${(x.codes||[]).map(c=>`<div class="hr2"><span style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);">${c}</span><span class="badge bg-p">Klebsiella pn.</span></div>`).join('')}</div>`;
+    if(role==='diagnostik')return`<div class="hi"><div class="hd">${fmtDt(x.ts)}</div>${(x.patients||[]).map((p,i)=>`<div class="hr2"><div><div style="font-size:13px;color:var(--text2);">${p.name}</div><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);">${p.code}</div></div>${x.statuses?.[i]==='hospitalizovaný'?'<span class="badge bg-g">Odber</span>':'<span class="badge bg-r">Prep.</span>'}</div>`).join('')}</div>`;
+    if(role==='lekar')return`<div class="hi"><div class="hd">${fmtDt(x.ts)}</div>${(x.patients||[]).map((p,i)=>`<div class="hr2"><div><div style="font-size:13px;color:var(--text2);">${p.name}</div><div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);">${p.code}</div></div>${x.statuses?.[i]==='hospitalizovaný'?'<span class="badge bg-g">Hosp.</span>':'<span class="badge bg-r">Prep.</span>'}</div>`).join('')}</div>`;
+    return'';
+  }).join('');
+}
+
+// LABORANT
+async function lSend() {
+  const raw=document.getElementById('l-codes').value;
+  const codes=raw.split('\n').filter(l=>l.trim()).map(c=>c.trim());
+  if(!codes.length)return;
+  const btn=document.getElementById('btn-l-send');
+  btn.disabled=true; btn.textContent='Odosielam...';
+  await dbSet({step:'codes', codes, patients:[], statuses:{}, pathogen:'Klebsiella pneumoniae'});
+  saveHist('laborant',{codes});
+  document.getElementById('l-sent').style.display='block';
+  btn.style.display='none';
+}
+
+// DIAGNOSTIK
+async function loadDiag() {
+  const d=await dbGet();
+  renderDiag(d);
+}
+function renderDiag(d) {
+  document.getElementById('d-loading').style.display='none';
+  if(!d||d.step==='done'){
+    document.getElementById('d-waiting').style.display='block';
+    document.getElementById('d-f1').style.display='none';
+    document.getElementById('d-f2').style.display='none';
+    document.getElementById('d-f3').style.display='none';
+    return;
+  }
+  if(d.step==='codes'){
+    document.getElementById('d-waiting').style.display='none';
+    document.getElementById('d-f1').style.display='block';
+    document.getElementById('d-f2').style.display='none';
+    document.getElementById('d-f3').style.display='none';
+    if(!document.getElementById('dn-0')) {
+      document.getElementById('d-name-list').innerHTML=(d.codes||[]).map((c,i)=>
+        `<div class="pr"><div><div class="pcode">${c}</div><div class="ppat">Klebsiella pneumoniae</div></div><input type="text" id="dn-${i}" placeholder="Meno pacienta" style="width:150px;" /></div>`
+      ).join('');
+    }
+  }
+  if(d.step==='patients'){
+    document.getElementById('d-waiting').style.display='none';
+    document.getElementById('d-f1').style.display='none';
+    document.getElementById('d-f2').style.display='block';
+    document.getElementById('d-f3').style.display='none';
+  }
+  if(d.step==='statuses'){
+    document.getElementById('d-waiting').style.display='none';
+    document.getElementById('d-f1').style.display='none';
+    document.getElementById('d-f2').style.display='none';
+    document.getElementById('d-f3').style.display='block';
+    const hosp=(d.patients||[]).filter((p,i)=>d.statuses?.[i]==='hospitalizovaný');
+    document.getElementById('d-hc').textContent=hosp.length;
+    document.getElementById('d-exp-txt').textContent=hosp.length>0?hosp.map(p=>`${p.code}\tKlebsiella pneumoniae`).join('\n'):'— žiadni hospitalizovaní —';
+    saveHist('diagnostik',{patients:d.patients,statuses:d.statuses});
+  }
+}
+async function dSend() {
+  const d=await dbGet();
+  const codes=d?.codes||[];
+  const patients=codes.map((c,i)=>{const v=document.getElementById('dn-'+i);return{code:c,name:v&&v.value?v.value:'Pacient '+(i+1)};});
+  const btn=document.getElementById('btn-d-send');
+  btn.disabled=true;btn.textContent='Odosielam...';
+  await dbSet({step:'patients',patients});
+  document.getElementById('d-f1').style.display='none';
+  document.getElementById('d-f2').style.display='block';
+}
+async function dReset() {
+  await dbSet({step:'done',codes:[],patients:[],statuses:{}});
+  document.getElementById('d-f3').style.display='none';
+  document.getElementById('d-waiting').style.display='block';
+}
+function cpExp(){
+  const txt=document.getElementById('d-exp-txt').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const f=document.getElementById('exp-fl');f.style.display='inline';
+    setTimeout(()=>f.style.display='none',2500);
+  }).catch(()=>{});
+}
+
+// LEKÁR
+async function loadLek() {
+  const d=await dbGet();
+  renderLek(d);
+}
+function renderLek(d) {
+  document.getElementById('lk-loading').style.display='none';
+  if(!d||d.step!=='patients'){
+    document.getElementById('lk-waiting').style.display='block';
+    document.getElementById('lk-f1').style.display='none';
+    document.getElementById('lk-done').style.display='none';
+    return;
+  }
+  document.getElementById('lk-waiting').style.display='none';
+  document.getElementById('lk-done').style.display='none';
+  document.getElementById('lk-f1').style.display='block';
+  if(!document.getElementById('lb-0')){
+    document.getElementById('lk-list').innerHTML=(d.patients||[]).map((p,i)=>
+      `<div class="pr"><div><div class="pname">${p.name}</div><div class="pcode">${p.code}</div></div><div style="display:flex;gap:6px;" id="lb-${i}"><button class="bsm g" onclick="lkSt(${i},'hospitalizovaný')">✓ Hosp.</button><button class="bsm r" onclick="lkSt(${i},'prepustený')">✕ Prep.</button></div></div>`
+    ).join('');
+  }
+}
+const lkStatuses={};
+function lkSt(i,s){
+  lkStatuses[i]=s;
+  const el=document.getElementById('lb-'+i);
+  if(el)el.innerHTML=s==='hospitalizovaný'?'<span class="badge bg-g">Hospitalizovaný</span>':'<span class="badge bg-r">Prepustený</span>';
+}
+async function lkSend(){
+  const d=await dbGet();
+  const patients=d?.patients||[];
+  patients.forEach((p,i)=>{if(!lkStatuses[i])lkStatuses[i]='neoznačený';});
+  const btn=document.getElementById('btn-lk-send');
+  btn.disabled=true;btn.textContent='Odosielam...';
+  await dbSet({step:'statuses',statuses:{...lkStatuses}});
+  saveHist('lekar',{patients,statuses:{...lkStatuses}});
+  document.getElementById('lk-f1').style.display='none';
+  document.getElementById('lk-done').style.display='block';
+}
+function lkReset(){
+  document.getElementById('lk-done').style.display='none';
+  document.getElementById('lk-waiting').style.display='block';
+  Object.keys(lkStatuses).forEach(k=>delete lkStatuses[k]);
+}
+
+// MANAŽÉR
+async function buildDash(){
+  const d=await dbGet();
+  renderManDash(d);
+}
+function renderManDash(d){
+  const codes=d?.codes||[];
+  const patients=d?.patients||[];
+  const statuses=d?.statuses||{};
+  const total=codes.length||patients.length;
+  const hosp=Object.values(statuses).filter(s=>s==='hospitalizovaný').length;
+  const prep=Object.values(statuses).filter(s=>s==='prepustený').length;
+  document.getElementById('d-tot').textContent=total;
+  document.getElementById('d-h').textContent=hosp;
+  document.getElementById('d-p').textContent=prep;
+  const stepLabels={codes:'Laborant odoslal kódy, čaká sa na diagnostika',patients:'Diagnostik priradil mená, čaká sa na lekára',statuses:'Lekár potvrdil stav — diagnostik exportuje',done:'Session ukončená'};
+  const statusEl=document.getElementById('m-status');
+  if(d&&d.step){
+    statusEl.innerHTML=`<div style="font-size:14px;color:var(--text2);padding:8px 0;">${stepLabels[d.step]||'Prebieha...'}</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:4px;">LIS kódov: ${total} · Na odber: <span style="color:var(--green);">${hosp}</span> · Prepustených: <span style="color:var(--red);">${prep}</span></div>`;
+  } else {
+    statusEl.innerHTML='<div class="empty"><div class="eico">📭</div>Žiadna aktívna session</div>';
+  }
+  const hist=[...getHist('diagnostik'),...getHist('lekar')].sort((a,b)=>b.ts-a.ts).slice(0,10);
+  const hel=document.getElementById('m-hc');
+  if(!hist.length){hel.innerHTML='<div class="empty"><div class="eico">📂</div>Žiadne záznamy za posledných 7 dní</div>';return;}
+  hel.innerHTML=hist.map(h=>{
+    const hp=(h.patients||[]).filter((p,i)=>h.statuses?.[i]==='hospitalizovaný').length;
+    return`<div class="hi"><div class="hd">${fmtDt(h.ts)}</div><div style="font-size:13px;color:var(--text2);">${(h.patients||[]).length} pacientov · <span style="color:var(--green);">${hp} na odber</span></div></div>`;
+  }).join('');
+}
+
+buildSteps('laborant');
+</script>
+</body>
+</html>

@@ -288,7 +288,7 @@ function sessionId() {
 
 // SUPABASE HELPERS
 async function dbGet() {
-  const {data} = await sb.from('sessions').select('data').eq('id', sessionId()).single();
+  const {data} = await sb.from('sessions').select('data').eq('id', sessionId()).maybeSingle();
   return data?.data || null;
 }
 async function dbSet(patch) {

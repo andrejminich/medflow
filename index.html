@@ -430,6 +430,18 @@ async function lSend() {
 async function loadDiag() {
   const d=await dbGet();
   renderDiag(d);
+  // poll every 5 seconds as fallback
+  if(!window.diagPollInterval) {
+    window.diagPollInterval = setInterval(async()=>{
+      if(currentRole==='diagnostik'){
+        const d=await dbGet();
+        renderDiag(d);
+      } else {
+        clearInterval(window.diagPollInterval);
+        window.diagPollInterval=null;
+      }
+    },5000);
+  }
 }
 function renderDiag(d) {
   document.getElementById('d-loading').style.display='none';
@@ -495,6 +507,18 @@ function cpExp(){
 async function loadLek() {
   const d=await dbGet();
   renderLek(d);
+  // poll every 5 seconds as fallback
+  if(!window.lekPollInterval) {
+    window.lekPollInterval = setInterval(async()=>{
+      if(currentRole==='lekar'){
+        const d=await dbGet();
+        renderLek(d);
+      } else {
+        clearInterval(window.lekPollInterval);
+        window.lekPollInterval=null;
+      }
+    },5000);
+  }
 }
 function renderLek(d) {
   document.getElementById('lk-loading').style.display='none';

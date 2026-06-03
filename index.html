@@ -177,7 +177,8 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
         <button class="btn bp" onclick="lSend()" id="btn-l-send">📤 Odoslať diagnostikovi</button>
       </div>
       <div id="l-sent" style="display:none;">
-        <div class="status-bar ready">✅ Kódy odoslané — diagnostik ich vidí v reálnom čase</div>
+        <div class="status-bar ready">✅ Kódy odoslané — upozorni diagnostika</div>
+        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik')">💬 Upozorniť diagnostika cez WhatsApp</button>
       </div>
     </div>
     <div id="l-hist" style="display:none;"><div id="l-hc"></div></div>
@@ -204,6 +205,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
       </div>
       <div id="d-f2" style="display:none;">
         <div class="status-bar waiting pulse">⏳ Čakám na výsledok od lekára...</div>
+        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('lekar')">💬 Upozorniť lekára cez WhatsApp</button>
       </div>
       <div id="d-f3" style="display:none;">
         <div class="succ-row"><span style="color:var(--green);">✅</span><span style="font-size:13px;color:var(--green);">Výsledok prijatý — <strong id="d-hc">0</strong> hospitalizovaných na odber</span></div>
@@ -241,7 +243,8 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
       </div>
       <div id="lk-done" style="display:none;">
         <div class="status-bar ready">✅ Výsledok odoslaný diagnostikovi</div>
-        <button class="btn bgh" style="margin-top:10px;" onclick="lkReset()">Nová správa</button>
+        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik')">💬 Upozorniť diagnostika cez WhatsApp</button>
+        <button class="btn bgh" style="margin-top:8px;" onclick="lkReset()">Nová správa</button>
       </div>
     </div>
     <div id="lk-hist" style="display:none;"><div id="lk-hc"></div></div>
@@ -563,6 +566,22 @@ function renderManDash(d){
     const hp=(h.patients||[]).filter((p,i)=>h.statuses?.[i]==='hospitalizovaný').length;
     return`<div class="hi"><div class="hd">${fmtDt(h.ts)}</div><div style="font-size:13px;color:var(--text2);">${(h.patients||[]).length} pacientov · <span style="color:var(--green);">${hp} na odber</span></div></div>`;
   }).join('');
+}
+
+const WA_NUMBERS = {
+  laborant: '420903894369',
+  diagnostik: '420908700989',
+  lekar: '420907410804',
+};
+const WA_MSGS = {
+  diagnostik: '🧫 *MedFlow* — otvor appku, čakajú na teba nové kódy od laboranta.',
+  lekar: '🩺 *MedFlow* — otvor appku, čaká na teba zoznam pacientov od diagnostika.',
+  laborant: '🔬 *MedFlow* — otvor appku, čaká na teba nová správa.',
+};
+function waNotify(role) {
+  const number = WA_NUMBERS[role];
+  const msg = encodeURIComponent(WA_MSGS[role] || 'Otvor MedFlow.');
+  window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
 }
 
 buildSteps('laborant');

@@ -522,14 +522,14 @@ async function loadLek() {
 }
 function renderLek(d) {
   document.getElementById('lk-loading').style.display='none';
+  // ak je už zobrazený "done" stav, nič nemeň
+  if(document.getElementById('lk-done').style.display==='block') return;
   if(!d||d.step!=='patients'){
     document.getElementById('lk-waiting').style.display='block';
     document.getElementById('lk-f1').style.display='none';
-    document.getElementById('lk-done').style.display='none';
     return;
   }
   document.getElementById('lk-waiting').style.display='none';
-  document.getElementById('lk-done').style.display='none';
   document.getElementById('lk-f1').style.display='block';
   if(!document.getElementById('lb-0')){
     document.getElementById('lk-list').innerHTML=(d.patients||[]).map((p,i)=>
@@ -552,6 +552,7 @@ async function lkSend(){
   await dbSet({step:'statuses',statuses:{...lkStatuses}});
   saveHist('lekar',{patients,statuses:{...lkStatuses}});
   document.getElementById('lk-f1').style.display='none';
+  document.getElementById('lk-waiting').style.display='none';
   document.getElementById('lk-done').style.display='block';
 }
 function lkReset(){

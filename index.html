@@ -178,7 +178,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
       </div>
       <div id="l-sent" style="display:none;">
         <div class="status-bar ready">✅ Kódy odoslané — upozorni diagnostika</div>
-        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik')">💬 Upozorniť diagnostika cez WhatsApp</button>
+        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik','laborant')">💬 Upozorniť diagnostika cez WhatsApp</button>
       </div>
     </div>
     <div id="l-hist" style="display:none;"><div id="l-hc"></div></div>
@@ -243,7 +243,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
       </div>
       <div id="lk-done" style="display:none;">
         <div class="status-bar ready">✅ Výsledok odoslaný diagnostikovi</div>
-        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik')">💬 Upozorniť diagnostika cez WhatsApp</button>
+        <button class="btn" style="background:#25d366;color:#fff;margin-top:10px;" onclick="waNotify('diagnostik','lekar')">💬 Upozorniť diagnostika cez WhatsApp</button>
         <button class="btn bgh" style="margin-top:8px;" onclick="lkReset()">Nová správa</button>
       </div>
     </div>
@@ -599,13 +599,14 @@ const WA_NUMBERS = {
   lekar: '421907410804',
 };
 const WA_MSGS = {
-  diagnostik: '🧫 *MedFlow* — otvor appku, čakajú na teba nové kódy od laboranta.',
+  diagnostik_laborant: '🧫 *MedFlow* — otvor appku, čakajú na teba nové kódy od laboranta.',
+  diagnostik_lekar: '🧫 *MedFlow* — otvor appku, lekár potvrdil stav pacientov.',
   lekar: '🩺 *MedFlow* — otvor appku, čaká na teba zoznam pacientov od diagnostika.',
-  laborant: '🔬 *MedFlow* — otvor appku, čaká na teba nová správa.',
 };
-function waNotify(role) {
+function waNotify(role, sender) {
   const number = WA_NUMBERS[role];
-  const msg = encodeURIComponent(WA_MSGS[role] || 'Otvor MedFlow.');
+  const msgKey = sender ? `${role}_${sender}` : role;
+  const msg = encodeURIComponent(WA_MSGS[msgKey] || WA_MSGS[role] || 'Otvor MedFlow.');
   window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
 }
 

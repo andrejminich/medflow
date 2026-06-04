@@ -430,7 +430,6 @@ async function lSend() {
 async function loadDiag() {
   const d=await dbGet();
   renderDiag(d);
-  // poll every 5 seconds as fallback
   if(!window.diagPollInterval) {
     window.diagPollInterval = setInterval(async()=>{
       if(currentRole==='diagnostik'){
@@ -440,12 +439,12 @@ async function loadDiag() {
         clearInterval(window.diagPollInterval);
         window.diagPollInterval=null;
       }
-    },5000);
+    },3000);
   }
 }
 function renderDiag(d) {
   document.getElementById('d-loading').style.display='none';
-  if(!d||d.step==='done'){
+  if(!d || !d.step || d.step==='done'){
     document.getElementById('d-waiting').style.display='block';
     document.getElementById('d-f1').style.display='none';
     document.getElementById('d-f2').style.display='none';
@@ -464,6 +463,8 @@ function renderDiag(d) {
     }
   }
   if(d.step==='patients'){
+    // ak sme už odoslali (f2 zobrazené), nemeň nič
+    if(document.getElementById('d-f2').style.display==='block') return;
     document.getElementById('d-waiting').style.display='none';
     document.getElementById('d-f1').style.display='none';
     document.getElementById('d-f2').style.display='block';
@@ -476,7 +477,9 @@ function renderDiag(d) {
     document.getElementById('d-f3').style.display='block';
     const hosp=(d.patients||[]).filter((p,i)=>d.statuses?.[i]==='hospitalizovaný');
     document.getElementById('d-hc').textContent=hosp.length;
-    document.getElementById('d-exp-txt').textContent=hosp.length>0?hosp.map(p=>`${p.code}\tKlebsiella pneumoniae`).join('\n'):'— žiadni hospitalizovaní —';
+    document.getElementById('d-exp-txt').textContent=hosp.length>0
+      ? hosp.map(p=>`${p.code}\tKlebsiella pneumoniae`).join('\n')
+      : '— žiadni hospitalizovaní —';
     saveHist('diagnostik',{patients:d.patients,statuses:d.statuses});
   }
 }
@@ -507,7 +510,6 @@ function cpExp(){
 async function loadLek() {
   const d=await dbGet();
   renderLek(d);
-  // poll every 5 seconds as fallback
   if(!window.lekPollInterval) {
     window.lekPollInterval = setInterval(async()=>{
       if(currentRole==='lekar'){
@@ -517,7 +519,7 @@ async function loadLek() {
         clearInterval(window.lekPollInterval);
         window.lekPollInterval=null;
       }
-    },5000);
+    },3000);
   }
 }
 function renderLek(d) {

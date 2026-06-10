@@ -424,6 +424,8 @@ async function lSend() {
   saveHist('laborant',{codes});
   document.getElementById('l-sent').style.display='block';
   btn.style.display='none';
+  // automaticky otvor WhatsApp
+  waNotify('diagnostik','laborant');
 }
 
 // DIAGNOSTIK
@@ -492,6 +494,8 @@ async function dSend() {
   await dbSet({step:'patients',patients});
   document.getElementById('d-f1').style.display='none';
   document.getElementById('d-f2').style.display='block';
+  // automaticky otvor WhatsApp
+  waNotify('lekar');
 }
 async function dReset() {
   await dbSet({step:'done',codes:[],patients:[],statuses:{}});
@@ -556,6 +560,8 @@ async function lkSend(){
   document.getElementById('lk-f1').style.display='none';
   document.getElementById('lk-waiting').style.display='none';
   document.getElementById('lk-done').style.display='block';
+  // automaticky otvor WhatsApp
+  waNotify('diagnostik','lekar');
 }
 function lkReset(){
   document.getElementById('lk-done').style.display='none';

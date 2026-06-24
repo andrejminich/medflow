@@ -137,7 +137,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
     <div class="rc lab" onclick="goPin('laborant')"><span class="rc-ico">🔬</span><div class="rc-name">Laborant</div><div class="rc-desc">Zadáva LIS kódy</div></div>
     <div class="rc dia" onclick="goPin('diagnostik')"><span class="rc-ico">🧫</span><div class="rc-name">Diagnostik</div><div class="rc-desc">Priraďuje mená</div></div>
     <div class="rc lek" onclick="goPin('lekar')"><span class="rc-ico">🩺</span><div class="rc-name">Lekár</div><div class="rc-desc">Potvrdzuje stav</div></div>
-    <div class="rc man" onclick="goPin('manazer')"><span class="rc-ico">📊</span><div class="rc-name">Manažér</div><div class="rc-desc">Sleduje priebeh</div></div>
+    <div class="rc man" onclick="goPin('manazer')"><span class="rc-ico">🧬</span><div class="rc-name">Biobanka</div><div class="rc-desc">Sleduje priebeh</div></div>
   </div>
 </div>
 
@@ -253,7 +253,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--purple);}
 
 <!-- MANAŽÉR -->
 <div class="page" id="p-manazer">
-  <div class="topbar"><div class="rpill man">📊 Manažér</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
+  <div class="topbar"><div class="rpill man">🧬 Biobanka</div><div class="chg" onclick="show('p-role')">zmeniť rolu</div></div>
   <div class="wrap" style="padding-top:8px;">
     <div class="dgrid">
       <div class="dc"><div class="dnum" id="d-tot" style="color:var(--purple);">0</div><div class="dlbl">LIS kódov</div></div>
@@ -560,8 +560,10 @@ async function lkSend(){
   document.getElementById('lk-f1').style.display='none';
   document.getElementById('lk-waiting').style.display='none';
   document.getElementById('lk-done').style.display='block';
-  // automaticky otvor WhatsApp
+  // automaticky otvor WhatsApp pre diagnostika
   waNotify('diagnostik','lekar');
+  // automaticky upozorni biobanku
+  setTimeout(()=>waBiobanka(patients,{...lkStatuses}), 1500);
 }
 function lkReset(){
   document.getElementById('lk-done').style.display='none';
@@ -605,17 +607,26 @@ const WA_NUMBERS = {
   laborant: '421910901789',
   diagnostik: '421911344347',
   lekar: '421908731474',
+  biobanka: '421904798198',
 };
 const WA_MSGS = {
   diagnostik_laborant: '🧫 *MedFlow* — otvor appku, čakajú na teba nové kódy od laboranta.',
   diagnostik_lekar: '🧫 *MedFlow* — otvor appku, lekár potvrdil stav pacientov.',
   lekar: '🩺 *MedFlow* — otvor appku, čaká na teba zoznam pacientov od diagnostika.',
 };
-function waNotify(role, sender) {
+function waNotify(role, sender, extra) {
   const number = WA_NUMBERS[role];
   const msgKey = sender ? `${role}_${sender}` : role;
-  const msg = encodeURIComponent(WA_MSGS[msgKey] || WA_MSGS[role] || 'Otvor MedFlow.');
+  const msg = encodeURIComponent(extra || WA_MSGS[msgKey] || WA_MSGS[role] || 'Otvor MedFlow.');
   window.open(`https://wa.me/${number}?text=${msg}`, '_blank');
+}
+function waBiobanka(patients, statuses) {
+  const hosp = patients.filter((p,i) => statuses[i]==='hospitalizovaný');
+  if(!hosp.length) return;
+  const zoznam = hosp.map(p => `• ${p.code}`).join('\n');
+  const msg = `🩸 *MedFlow — Odber krvi*\n\nOčakávaj krv od ${hosp.length} pacient${hosp.length===1?'a':'ov'}:\n\n${zoznam}\n\nPatogén: Klebsiella pneumoniae`;
+  const number = WA_NUMBERS.biobanka;
+  window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 buildSteps('laborant');
